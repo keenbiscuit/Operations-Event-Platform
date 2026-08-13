@@ -1,5 +1,6 @@
 package com.solomondev.op_event_platform.entity;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,37 +17,30 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "assets")
+@Table(name = "rules")
 @Getter
 @Setter
-public class Asset {
+public class Rule {
+    
+    // Primary key
     @Id
+    // Added generated value to increment pk automatically
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Not null
-    @Column(nullable = false)
-    private String name;
 
-    // Not null
     @Column(nullable = false)
-    private String type;
+    private String conditionType;
 
-    // Many assets can belong to one Org
-    // Fk that connects Asset to org
+    // "Ex: create a payment alert when payment above: threshold"
+    private BigDecimal threshold;
+
+    // Many Rules can belong to one Org
+    // Fk that connects Rule to org
     @ManyToOne
     @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
-    // So we can implement assets.getRules
-    // Show me every rule current applied to this asset
-    @OneToMany(mappedBy = "asset")
-    private List<RuleAssignment> ruleAssignments = new ArrayList<>();
 
-    // Helper method
-    // Add a RuleAssignment
-    public void addRule(RuleAssignment ra) {
-        ruleAssignments.add(ra);
-        ra.setAsset(this);
-    }
+    
 }

@@ -34,10 +34,15 @@ public class Org {
     @OneToMany(mappedBy = "org")
     private List<OrgMembership> orgMemberships = new ArrayList<>();
 
-    // So we can implement org.GetAssets
+    // So we can implement org.getAssets
     // mapped by always referes to field name of other entity(owning side)
     @OneToMany(mappedBy = "org")
     private List<Asset> assets = new ArrayList<>();
+
+    // So we can implement org.getRules
+    // mapped by always referes to field name of other entity(owning side)
+    @OneToMany(mappedBy = "org")
+    private List<Rule> rules = new ArrayList<>();
 
     public void addMembership(OrgMembership m) {
         orgMemberships.add(m);
@@ -47,6 +52,12 @@ public class Org {
     public void addAsset(Asset a) {
         assets.add(a);
         a.setOrg(this);
+    }
+
+    public void addRule(Rule r)
+    {
+        rules.add(r);
+        r.setOrg(this);
     }
 
 }
