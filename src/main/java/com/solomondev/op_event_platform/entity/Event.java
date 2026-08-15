@@ -19,7 +19,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Event {
-    
 
     // Primary Key
     @Id
@@ -27,9 +26,9 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //One Asset can have many events
+    // One Asset can have many events
     @ManyToOne
-    @JoinColumn(name = "asset", nullable = false)
+    @JoinColumn(name = "asset_id", nullable = false)
     private Asset assetId;
 
     @Column(nullable = false)
@@ -40,5 +39,5 @@ public class Event {
 
     @Column(nullable = false)
     private LocalDateTime occurredAt;
-    
+
 }
