@@ -1,0 +1,19 @@
+Flow for what should happen when an event is received
+
+Application Overview:
+    Users create monitored assets—for example, payment accounts, delivery vehicles, cloud services, or machines. The system receives events, evaluates rules, creates alerts,
+tracks incident status, and sends real-time dashboard updates.
+
+    Example: a transaction exceeds a defined threshold, arrives from an unusual location, or fails several times; your application records it, 
+flags it, opens an alert, and pushes an update to the dashboard.
+
+
+1. When an event is received Target asset is identified by asset_id
+2. Then we use the asset_id to get a list of rules assigned to the asset
+3. We then check if the threshold value is exceeded and the severity of the rule
+letting us know how bad things will be if this threshold is exceeded, if the severity is high
+and the threshold is close to being exceeded an alert should be sent, otherwise just send when threshold is exceeded,
+depending on the severity we can take different courses of action when the rule is broken
+4. If an alert is already marked enabled, then no need to open a duplicate but might need to resend the alert depending on severity
+and how long the alert has gone un acknowledged
+5. need to think about the creation of AlertEvent

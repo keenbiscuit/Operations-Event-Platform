@@ -1,8 +1,13 @@
 package com.solomondev.op_event_platform.entity;
 
 import java.math.BigDecimal;
+
+import com.solomondev.op_event_platform.entity.enums.RuleOperator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,6 +42,7 @@ public class Rule {
     @JoinColumn(name = "org_id", nullable = false)
     private Org org;
 
-
-    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RuleOperator operator;
 }

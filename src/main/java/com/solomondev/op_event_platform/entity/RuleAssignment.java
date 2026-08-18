@@ -34,7 +34,7 @@ public class RuleAssignment {
     @JoinColumn(name = "rule_id", nullable = false)
     private Rule rule;
 
-    // Severity of the rule
+    // Severity of the consequence if rule is broken
     @Column(nullable = false)
     private String severity;
 
