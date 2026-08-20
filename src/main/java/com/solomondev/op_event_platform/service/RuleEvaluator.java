@@ -1,8 +1,12 @@
 package com.solomondev.op_event_platform.service;
 
 import java.math.BigDecimal;
+
+import org.springframework.stereotype.Service;
+
 import com.solomondev.op_event_platform.entity.enums.RuleOperator;
 
+@Service
 public class RuleEvaluator {
     public boolean evaluate(BigDecimal eventValue, RuleOperator operator, BigDecimal threshold) {
         // Validate input
