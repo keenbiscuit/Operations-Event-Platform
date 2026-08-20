@@ -29,10 +29,10 @@ public class Event {
     // One Asset can have many events
     @ManyToOne
     @JoinColumn(name = "asset_id", nullable = false)
-    private Asset assetId;
+    private Asset asset;
 
     @Column(nullable = false)
-    private String eventType;
+    private String eventType; 
 
     @Column(nullable = false)
     private BigDecimal value;
