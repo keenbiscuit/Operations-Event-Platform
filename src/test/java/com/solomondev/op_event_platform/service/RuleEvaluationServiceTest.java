@@ -1,7 +1,5 @@
 package com.solomondev.op_event_platform.service;
 
-import static org.mockito.ArgumentMatchers.matches;
-
 import java.math.BigDecimal;
 
 import org.junit.jupiter.api.Assertions;
