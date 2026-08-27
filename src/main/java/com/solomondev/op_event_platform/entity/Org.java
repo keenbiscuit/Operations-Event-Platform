@@ -7,6 +7,8 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,11 +33,13 @@ public class Org {
 
     // So we can implement org.getMemberships
     // mapped by always referes to field name of other entity(owning side)
+
     @OneToMany(mappedBy = "org")
     private List<OrgMembership> orgMemberships = new ArrayList<>();
 
     // So we can implement org.getAssets
     // mapped by always referes to field name of other entity(owning side)
+    @JsonIgnore
     @OneToMany(mappedBy = "org")
     private List<Asset> assets = new ArrayList<>();
 
@@ -54,8 +58,7 @@ public class Org {
         a.setOrg(this);
     }
 
-    public void addRule(Rule r)
-    {
+    public void addRule(Rule r) {
         rules.add(r);
         r.setOrg(this);
     }

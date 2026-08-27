@@ -3,6 +3,8 @@ package com.solomondev.op_event_platform.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -40,6 +42,7 @@ public class Asset {
 
     // So we can implement assets.getRules
     // Show me every rule current applied to this asset
+    @JsonIgnore
     @OneToMany(mappedBy = "asset")
     private List<RuleAssignment> ruleAssignments = new ArrayList<>();
 
