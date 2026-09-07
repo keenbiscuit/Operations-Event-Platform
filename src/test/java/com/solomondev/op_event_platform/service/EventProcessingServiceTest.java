@@ -33,135 +33,135 @@ import com.solomondev.op_event_platform.repository.RuleAssignmentRepository;
 
 @ExtendWith(MockitoExtension.class)
 class EventProcessingServiceTest {
-    @Mock
-    private EventRepository eventRepository;
+        @Mock
+        private EventRepository eventRepository;
 
-    @Mock
-    private RuleAssignmentRepository ruleAssignmentRepository;
+        @Mock
+        private RuleAssignmentRepository ruleAssignmentRepository;
 
-    @Mock
-    private AlertRepository alertRepository;
+        @Mock
+        private AlertRepository alertRepository;
 
-    @Mock
-    private AlertEventRepository alertEventRepository;
+        @Mock
+        private AlertEventRepository alertEventRepository;
 
-    @Mock
-    private RuleEvaluationService ruleEvaluationService;
+        @Mock
+        private RuleEvaluationService ruleEvaluationService;
 
-    @InjectMocks
-    private EventProcessingService eventProcessingService;
+        @InjectMocks
+        private EventProcessingService eventProcessingService;
 
-    private Asset asset;
-    private Event event;
-    private Rule rule;
-    private RuleAssignment assignment;
+        private Asset asset;
+        private Event event;
+        private Rule rule;
+        private RuleAssignment assignment;
 
-    @BeforeEach
-    void setUp() {
-        asset = new Asset();
-        asset.setId(1L);
+        @BeforeEach
+        void setUp() {
+                asset = new Asset();
+                asset.setId(1L);
 
-        event = new Event();
-        event.setId(10L);
-        event.setAsset(asset);
-        event.setEventType("PAYMENT");
-        event.setValue(new BigDecimal("150"));
+                event = new Event();
+                event.setId(10L);
+                event.setAsset(asset);
+                event.setEventType("PAYMENT");
+                event.setValue(new BigDecimal("150"));
 
-        rule = new Rule();
-        rule.setId(20L);
-        rule.setConditionType("PAYMENT");
-        rule.setOperator(RuleOperator.GREATER_THAN);
+                rule = new Rule();
+                rule.setId(20L);
+                rule.setConditionType("PAYMENT");
+                rule.setOperator(RuleOperator.GREATER_THAN);
 
-        assignment = new RuleAssignment();
-        assignment.setId(30L);
-        assignment.setAsset(asset);
-        assignment.setRule(rule);
-        assignment.setThreshold(new BigDecimal("100"));
-        assignment.setSeverity("HIGH");
-        assignment.setEnabled(true);
-    }
+                assignment = new RuleAssignment();
+                assignment.setId(30L);
+                assignment.setAsset(asset);
+                assignment.setRule(rule);
+                assignment.setThreshold(new BigDecimal("100"));
+                assignment.setSeverity("HIGH");
+                assignment.setEnabled(true);
+        }
 
-    @Test
-    void savesAlertAndAlertEventWhenAssignmentMatches() {
-        // Arrange: configure test data and fake dependency behavior
-        when(eventRepository.findById(10L)).thenReturn(Optional.of(event));
+        @Test
+        void savesAlertAndAlertEventWhenAssignmentMatches() {
+                // Arrange: configure test data and fake dependency behavior
+                when(eventRepository.findById(10L)).thenReturn(Optional.of(event));
 
-        when(ruleAssignmentRepository.findByAsset_Id(1L))
-                .thenReturn(List.of(assignment));
+                when(ruleAssignmentRepository.findByAsset_Id(1L))
+                                .thenReturn(List.of(assignment));
 
-        when(ruleEvaluationService.matches(event, assignment))
-                .thenReturn(true);
+                when(ruleEvaluationService.matches(event, assignment))
+                                .thenReturn(true);
 
-        when(alertRepository.save(any(Alert.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                when(alertRepository.save(any(Alert.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Running service method
-        eventProcessingService.processEvent(10L);
+                // Running service method
+                eventProcessingService.processEvent(10L);
 
-        // Confirm the expected writes
-        verify(alertRepository, times(1)).save(any(Alert.class));
-        verify(alertEventRepository, times(1)).save(any(AlertEvent.class));
-    }
+                // Confirm the expected writes
+                verify(alertRepository, times(1)).save(any(Alert.class));
+                verify(alertEventRepository, times(1)).save(any(AlertEvent.class));
+        }
 
-    @Test
-    void savesTwoAlertsWhenTwoAssignmentsMatch() {
-        RuleAssignment secondAssignment = new RuleAssignment();
-        secondAssignment.setId(31L);
-        secondAssignment.setAsset(asset);
-        secondAssignment.setRule(rule);
-        secondAssignment.setThreshold(new BigDecimal("100"));
-        secondAssignment.setSeverity("MEDIUM");
-        secondAssignment.setEnabled(true);
+        @Test
+        void savesTwoAlertsWhenTwoAssignmentsMatch() {
+                RuleAssignment secondAssignment = new RuleAssignment();
+                secondAssignment.setId(31L);
+                secondAssignment.setAsset(asset);
+                secondAssignment.setRule(rule);
+                secondAssignment.setThreshold(new BigDecimal("100"));
+                secondAssignment.setSeverity("MEDIUM");
+                secondAssignment.setEnabled(true);
 
-        when(eventRepository.findById(10L))
-                .thenReturn(Optional.of(event));
+                when(eventRepository.findById(10L))
+                                .thenReturn(Optional.of(event));
 
-        when(ruleAssignmentRepository.findByAsset_Id(1L))
-                .thenReturn(List.of(assignment, secondAssignment));
+                when(ruleAssignmentRepository.findByAsset_Id(1L))
+                                .thenReturn(List.of(assignment, secondAssignment));
 
-        when(ruleEvaluationService.matches(event, assignment))
-                .thenReturn(true);
+                when(ruleEvaluationService.matches(event, assignment))
+                                .thenReturn(true);
 
-        when(ruleEvaluationService.matches(event, secondAssignment))
-                .thenReturn(true);
+                when(ruleEvaluationService.matches(event, secondAssignment))
+                                .thenReturn(true);
 
-        when(alertRepository.save(any(Alert.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                when(alertRepository.save(any(Alert.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        eventProcessingService.processEvent(10L);
+                eventProcessingService.processEvent(10L);
 
-        verify(alertRepository, times(2)).save(any(Alert.class));
-        verify(alertEventRepository, times(2)).save(any(AlertEvent.class));
-    }
+                verify(alertRepository, times(2)).save(any(Alert.class));
+                verify(alertEventRepository, times(2)).save(any(AlertEvent.class));
+        }
 
-    @Test
-    void doesNotSaveAlertWhenAssignmentDoesNotMatch() {
-        when(eventRepository.findById(10L))
-                .thenReturn(Optional.of(event));
+        @Test
+        void doesNotSaveAlertWhenAssignmentDoesNotMatch() {
+                when(eventRepository.findById(10L))
+                                .thenReturn(Optional.of(event));
 
-        when(ruleAssignmentRepository.findByAsset_Id(1L))
-                .thenReturn(List.of(assignment));
+                when(ruleAssignmentRepository.findByAsset_Id(1L))
+                                .thenReturn(List.of(assignment));
 
-        when(ruleEvaluationService.matches(event, assignment))
-                .thenReturn(false);
+                when(ruleEvaluationService.matches(event, assignment))
+                                .thenReturn(false);
 
-        eventProcessingService.processEvent(10L);
+                eventProcessingService.processEvent(10L);
 
-        verify(alertRepository, never()).save(any(Alert.class));
-        verify(alertEventRepository, never()).save(any(AlertEvent.class));
-    }
+                verify(alertRepository, never()).save(any(Alert.class));
+                verify(alertEventRepository, never()).save(any(AlertEvent.class));
+        }
 
-    @Test
-    void eventNotFound() {
-        when(eventRepository.findById(10L))
-                .thenReturn(Optional.empty());
+        @Test
+        void throwsExceptionWhenEventNotFound() {
+                when(eventRepository.findById(10L))
+                                .thenReturn(Optional.empty());
 
-        Assertions.assertThrows(
-                IllegalArgumentException.class,
-                () -> eventProcessingService.processEvent(10L));
+                Assertions.assertThrows(
+                                IllegalArgumentException.class,
+                                () -> eventProcessingService.processEvent(10L));
 
-        verify(ruleAssignmentRepository, never()).findByAsset_Id(anyLong());
-        verify(alertRepository, never()).save(any(Alert.class));
-        verify(alertEventRepository, never()).save(any(AlertEvent.class));
-    }
+                verify(ruleAssignmentRepository, never()).findByAsset_Id(anyLong());
+                verify(alertRepository, never()).save(any(Alert.class));
+                verify(alertEventRepository, never()).save(any(AlertEvent.class));
+        }
 }

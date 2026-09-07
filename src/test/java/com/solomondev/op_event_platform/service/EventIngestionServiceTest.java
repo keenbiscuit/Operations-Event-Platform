@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.solomondev.op_event_platform.entity.Asset;
 import com.solomondev.op_event_platform.entity.Event;
 import com.solomondev.op_event_platform.model.CreateEventRequestDto;
+import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 import com.solomondev.op_event_platform.repository.AssetRepository;
 import com.solomondev.op_event_platform.repository.EventRepository;
 
@@ -84,8 +85,8 @@ public class EventIngestionServiceTest {
         when(assetRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = Assertions.assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException exception = Assertions.assertThrows(
+                ResourceNotFoundException.class,
                 () -> eventIngestionService.ingestEvent(request));
 
         assertEquals("Asset not found: 1", exception.getMessage());

@@ -2,6 +2,9 @@ package com.solomondev.op_event_platform.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.solomondev.op_event_platform.entity.Event;
 import com.solomondev.op_event_platform.model.CreateEventRequestDto;
+import com.solomondev.op_event_platform.model.exception.ApiError;
 import com.solomondev.op_event_platform.service.EventIngestionService;
 
 import jakarta.validation.Valid;
@@ -18,16 +22,15 @@ import jakarta.validation.Valid;
 public class EventController {
     private final EventIngestionService eventIngestionService;
 
-    public EventController(EventIngestionService eventIngestionService)
-    {
+    public EventController(EventIngestionService eventIngestionService) {
         this.eventIngestionService = eventIngestionService;
     }
 
     @PostMapping
-    public ResponseEntity<Event> createEvent(@Valid @RequestBody CreateEventRequestDto request)
-    {
+    public ResponseEntity<Event> createEvent(@Valid @RequestBody CreateEventRequestDto request) {
         Event savedEvent = eventIngestionService.ingestEvent(request);
 
         return new ResponseEntity<>(savedEvent, HttpStatus.CREATED);
     }
+
 }

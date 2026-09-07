@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.solomondev.op_event_platform.entity.Asset;
 import com.solomondev.op_event_platform.entity.Event;
 import com.solomondev.op_event_platform.model.CreateEventRequestDto;
+import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 import com.solomondev.op_event_platform.repository.AssetRepository;
 import com.solomondev.op_event_platform.repository.EventRepository;
 
@@ -33,7 +34,7 @@ public class EventIngestionService {
     public Event ingestEvent(CreateEventRequestDto request) {
         // Load existing asset
         Asset asset = assetRepository.findById(request.getAssetId())
-                .orElseThrow(() -> new IllegalArgumentException("Asset not found: " + request.getAssetId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + request.getAssetId()));
 
         // Build an event
         Event event = new Event();
