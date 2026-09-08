@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.solomondev.op_event_platform.model.dto.AlertResponseDto;
@@ -21,8 +22,14 @@ public class AlertController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AlertResponseDto>> getAllAlerts() {
-        List<AlertResponseDto> alerts = alertService.getAllAlerts();
+
+    public ResponseEntity<List<AlertResponseDto>> getAllAlerts(@RequestParam(required = false) String status) {
+        List<AlertResponseDto> alerts;
+        if (status == null)
+            alerts = alertService.getAllAlerts();
+        else
+            alerts = alertService.getAlertsByStatus(status);
+
         return new ResponseEntity<>(alerts, HttpStatus.OK);
     }
 }

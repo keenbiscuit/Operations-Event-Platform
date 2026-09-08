@@ -68,4 +68,29 @@ public class AlertControllerTest {
 
         verify(alertService, times(1)).getAllAlerts();
     }
+
+    @Test
+    void returnsAllAlertsWhenNoStatusParameterIsProvided() throws Exception {
+
+        when(alertService.getAllAlerts()).thenReturn(List.of(alert1, alert2));
+
+        mockMvc.perform(get("/api/alerts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+
+        verify(alertService, times(1)).getAllAlerts();
+
+    }
+
+    @Test
+    void returnsMappedAlertWhenStatusIsProvided() throws Exception {
+        when(alertService.getAlertsByStatus("OPEN")).thenReturn(List.of(alert1, alert2));
+
+        mockMvc.perform(get("/api/alerts").param("status", "OPEN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].status").value("OPEN"));
+
+        verify(alertService, times(1)).getAlertsByStatus("OPEN");
+    }
 }

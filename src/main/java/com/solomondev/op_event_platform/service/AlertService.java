@@ -25,6 +25,14 @@ public class AlertService {
 
     }
 
+    public List<AlertResponseDto> getAlertsByStatus(String status) {
+
+        return alertRepository.findByStatus(status)
+                .stream()
+                .map(this::mapToResponseDto)
+                .toList();
+    }
+
     private AlertResponseDto mapToResponseDto(Alert alert) {
 
         AlertResponseDto dto = new AlertResponseDto();

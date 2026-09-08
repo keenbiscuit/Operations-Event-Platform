@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -70,7 +69,7 @@ public class AlertServiceTest {
     @Test
     void returnsMappedAlertsWhenAlertsExist() {
         when(alertRepository.findAll()).thenReturn(List.of(alert1, alert2));
-        
+
         List<AlertResponseDto> result = alertService.getAllAlerts();
 
         assertEquals(2, result.size());
@@ -88,4 +87,16 @@ public class AlertServiceTest {
 
         verify(alertRepository).findAll();
     }
+
+    @Test
+    void returnsMappedAlertFilteredByStatus() {
+        when(alertRepository.findByStatus("OPEN")).thenReturn(List.of(alert1));
+
+        List<AlertResponseDto> result = alertService.getAlertsByStatus("OPEN");
+
+        assertEquals(1, result.size());
+
+        verify(alertRepository).findByStatus("OPEN");
+    }
+
 }
