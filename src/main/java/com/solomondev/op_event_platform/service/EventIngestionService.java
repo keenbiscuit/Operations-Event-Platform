@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.solomondev.op_event_platform.entity.Asset;
 import com.solomondev.op_event_platform.entity.Event;
-import com.solomondev.op_event_platform.model.CreateEventRequestDto;
+import com.solomondev.op_event_platform.model.dto.CreateEventRequestDto;
 import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 import com.solomondev.op_event_platform.repository.AssetRepository;
 import com.solomondev.op_event_platform.repository.EventRepository;

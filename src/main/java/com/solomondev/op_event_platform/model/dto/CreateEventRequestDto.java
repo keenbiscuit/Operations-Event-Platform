@@ -1,4 +1,4 @@
-package com.solomondev.op_event_platform.model;
+package com.solomondev.op_event_platform.model.dto;
 
 import java.math.BigDecimal;
 

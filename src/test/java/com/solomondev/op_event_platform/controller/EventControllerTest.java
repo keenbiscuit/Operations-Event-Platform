@@ -18,7 +18,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.solomondev.op_event_platform.entity.Event;
-import com.solomondev.op_event_platform.model.CreateEventRequestDto;
+import com.solomondev.op_event_platform.model.dto.CreateEventRequestDto;
 import com.solomondev.op_event_platform.model.exception.GlobalExceptionHandler;
 import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 import com.solomondev.op_event_platform.service.EventIngestionService;
