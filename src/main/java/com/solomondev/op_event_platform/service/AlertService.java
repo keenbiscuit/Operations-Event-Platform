@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.solomondev.op_event_platform.entity.Alert;
 import com.solomondev.op_event_platform.model.dto.AlertResponseDto;
+import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 import com.solomondev.op_event_platform.repository.AlertRepository;
 
 @Service
@@ -31,6 +32,14 @@ public class AlertService {
                 .stream()
                 .map(this::mapToResponseDto)
                 .toList();
+    }
+
+    public AlertResponseDto getAlertById(Long id) {
+        Alert alert = alertRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Alert not found with id: " + id));
+
+        return mapToResponseDto(alert);
     }
 
     private AlertResponseDto mapToResponseDto(Alert alert) {

@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +17,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.solomondev.op_event_platform.model.dto.AlertResponseDto;
+import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 import com.solomondev.op_event_platform.service.AlertService;
 
 @WebMvcTest(AlertController.class)
@@ -92,5 +92,30 @@ public class AlertControllerTest {
                 .andExpect(jsonPath("$[0].status").value("OPEN"));
 
         verify(alertService, times(1)).getAlertsByStatus("OPEN");
+    }
+
+    @Test
+    void returnsMappedAlertById() throws Exception {
+        when(alertService.getAlertById(1L)).thenReturn(alert1);
+
+        mockMvc.perform(get("/api/alerts/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.ruleAssignmentId").value(10))
+                .andExpect(jsonPath("$.status").value("OPEN"));
+
+        verify(alertService, times(1)).getAlertById(1L);
+    }
+
+    @Test
+    void returnsExceptionWhenAlertDoesNotExist() throws Exception {
+        when(alertService.getAlertById(99L))
+                .thenThrow(new ResourceNotFoundException(
+                        "Alert not found with id: " + 99L));
+
+        mockMvc.perform(get("/api/alerts/99"))
+                .andExpect(status().isNotFound());
+
+        verify(alertService).getAlertById(99L);
     }
 }
