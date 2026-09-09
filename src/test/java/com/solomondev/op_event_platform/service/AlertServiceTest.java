@@ -1,8 +1,11 @@
 package com.solomondev.op_event_platform.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -128,6 +131,30 @@ public class AlertServiceTest {
                 () -> alertService.getAlertById(99L));
 
         verify(alertRepository, times(1)).findById(99L);
+    }
+
+    @Test
+    void updatesAlertWhenAcknowledgedIsCalled() {
+        when(alertRepository.findById(1L)).thenReturn(Optional.of(alert1));
+
+        AlertResponseDto response = alertService.acknowledgeAlert(alert1.getId());
+
+        assertEquals("ACKNOWLEDGED", response.getStatus());
+        assertNotNull(response.getAcknowledgedAt());
+
+        verify(alertRepository).save(alert1);
+        verify(alertRepository).findById(1L);
+    }
+
+    @Test
+    void throwsExceptionWhenAcknowledgingMissingAlert() {
+        when(alertRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> alertService.acknowledgeAlert(99L));
+
+        verify(alertRepository).findById(99L);
+        verify(alertRepository, never()).save(any());
     }
 
 }

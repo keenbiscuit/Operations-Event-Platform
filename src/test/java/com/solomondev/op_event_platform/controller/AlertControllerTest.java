@@ -4,6 +4,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -118,4 +119,34 @@ public class AlertControllerTest {
 
         verify(alertService).getAlertById(99L);
     }
+
+    @Test
+    void acknowledgesAlertWhenAlertExists() throws Exception {
+
+        alert1.setStatus("ACKNOWLEDGED");
+        alert1.setAcknowledgedAt(LocalDateTime.of(2026, 9, 9, 11, 30));
+
+        when(alertService.acknowledgeAlert(1L)).thenReturn(alert1);
+
+        mockMvc.perform(patch("/api/alerts/1/acknowledge"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"))
+                .andExpect(jsonPath("$.acknowledgedAt").exists());
+
+        verify(alertService).acknowledgeAlert(1L);
+    }
+
+    @Test
+    void returnsNotFoundWhenAcknowledgingMissingAlert() throws Exception {
+        when(alertService.acknowledgeAlert(99L))
+                .thenThrow(new ResourceNotFoundException(
+                        "Alert not found with id: 99"));
+
+        mockMvc.perform(patch("/api/alerts/99/acknowledge"))
+                .andExpect(status().isNotFound());
+
+        verify(alertService).acknowledgeAlert(99L);
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.solomondev.op_event_platform.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -40,6 +41,20 @@ public class AlertService {
                         "Alert not found with id: " + id));
 
         return mapToResponseDto(alert);
+    }
+
+    public AlertResponseDto acknowledgeAlert(Long id) {
+        Alert alert = alertRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Alert not found with id: " + id));
+
+        alert.setStatus("ACKNOWLEDGED");
+        alert.setAcknowledgedAt(LocalDateTime.now());
+
+        alertRepository.save(alert);
+
+        return mapToResponseDto(alert);
+
     }
 
     private AlertResponseDto mapToResponseDto(Alert alert) {
