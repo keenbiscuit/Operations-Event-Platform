@@ -48,4 +48,11 @@ public class AlertController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PatchMapping("/{id}/resolve")
+    public ResponseEntity<AlertResponseDto> resolveAlert(@PathVariable Long id) {
+        AlertResponseDto response = alertService.resolveAlert(id);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }

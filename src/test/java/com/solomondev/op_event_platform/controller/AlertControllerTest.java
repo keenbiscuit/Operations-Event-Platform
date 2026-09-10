@@ -149,4 +149,33 @@ public class AlertControllerTest {
         verify(alertService).acknowledgeAlert(99L);
     }
 
+    @Test
+    void resolvesAlertWhenAlertExists() throws Exception {
+
+        alert1.setStatus("RESOLVED");
+        alert1.setResolvedAt(LocalDateTime.of(2026, 9, 9, 11, 30));
+
+        when(alertService.resolveAlert(1L)).thenReturn(alert1);
+
+        mockMvc.perform(patch("/api/alerts/1/resolve"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.status").value("RESOLVED"))
+                .andExpect(jsonPath("$.resolvedAt").exists());
+
+        verify(alertService).resolveAlert(1L);
+    }
+
+    @Test
+    void returnsNotFoundWhenResolvingMissingAlert() throws Exception {
+        when(alertService.resolveAlert(99L))
+                .thenThrow(new ResourceNotFoundException(
+                        "Alert not found with id: 99"));
+
+        mockMvc.perform(patch("/api/alerts/99/resolve"))
+                .andExpect(status().isNotFound());
+
+        verify(alertService).resolveAlert(99L);
+    }
+
 }

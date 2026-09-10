@@ -57,6 +57,19 @@ public class AlertService {
 
     }
 
+    public AlertResponseDto resolveAlert(Long id) {
+        Alert alert = alertRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Alert not found with id: " + id));
+
+        alert.setStatus("RESOLVED");
+        alert.setResolvedAt(LocalDateTime.now());
+
+        alertRepository.save(alert);
+
+        return mapToResponseDto(alert);
+    }
+
     private AlertResponseDto mapToResponseDto(Alert alert) {
 
         AlertResponseDto dto = new AlertResponseDto();

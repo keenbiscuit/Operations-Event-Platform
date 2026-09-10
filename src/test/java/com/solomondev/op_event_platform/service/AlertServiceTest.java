@@ -157,4 +157,31 @@ public class AlertServiceTest {
         verify(alertRepository, never()).save(any());
     }
 
+    @Test
+    void resolvesAlertWhenAlertExists() {
+        when(alertRepository.findById(1L)).thenReturn(Optional.of(alert1));
+
+        AlertResponseDto response = alertService.resolveAlert(alert1.getId());
+
+        assertEquals("RESOLVED", response.getStatus());
+        assertNotNull(response.getResolvedAt());
+
+        assertEquals("RESOLVED", alert1.getStatus());
+        assertNotNull(alert1.getResolvedAt());
+
+        verify(alertRepository).save(alert1);
+        verify(alertRepository).findById(1L);
+    }
+
+    @Test
+    void throwsExceptionWhenResolvingMissingAlert() {
+        when(alertRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> alertService.resolveAlert(99L));
+
+        verify(alertRepository).findById(99L);
+        verify(alertRepository, never()).save(any());
+    }
+
 }
