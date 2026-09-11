@@ -24,12 +24,16 @@ public class AlertController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AlertResponseDto>> getAllAlerts(@RequestParam(required = false) String status) {
+    public ResponseEntity<List<AlertResponseDto>> getAllAlerts(@RequestParam(required = false) String status,
+            @RequestParam(required = false) Long assetId) {
         List<AlertResponseDto> alerts;
-        if (status == null)
-            alerts = alertService.getAllAlerts();
-        else
+
+        if (assetId != null) {
+            alerts = alertService.getAlertByRuleAssignmentAssetId(assetId);
+        } else if (status != null)
             alerts = alertService.getAlertsByStatus(status);
+        else
+            alerts = alertService.getAllAlerts();
 
         return new ResponseEntity<>(alerts, HttpStatus.OK);
     }

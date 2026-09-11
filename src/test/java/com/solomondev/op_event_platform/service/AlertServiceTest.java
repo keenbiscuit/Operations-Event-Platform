@@ -35,24 +35,43 @@ public class AlertServiceTest {
     private AlertService alertService;
 
     private Alert alert1;
-
     private Alert alert2;
+    private Alert alert3;
 
     private RuleAssignment instance1;
     private RuleAssignment instance2;
+    private RuleAssignment instance3;
+
+    private Asset asset1;
+    private Asset asset2;
 
     @BeforeEach
     void setUp() {
         LocalDateTime createdAt = LocalDateTime.of(2026, 9, 7, 14, 0);
 
+        asset1 = new Asset();
+        asset1.setId(1L);
+        asset1.setName("Test Asset");
+        asset1.setType("API");
+
+        asset2 = new Asset();
+        asset2.setId(2L);
+        asset2.setName("Order Database");
+        asset2.setType("DATABASE");
+
         instance1 = new RuleAssignment();
-        instance2 = new RuleAssignment();
         instance1.setId(10L);
+        instance1.setAsset(asset1);
+
+        instance2 = new RuleAssignment();
         instance2.setId(20L);
+        instance2.setAsset(asset2);
+
+        instance3 = new RuleAssignment();
+        instance3.setId(30L);
+        instance3.setAsset(asset2);
 
         alert1 = new Alert();
-        alert2 = new Alert();
-
         alert1.setId(1L);
         alert1.setStatus("OPEN");
         alert1.setSeverity("HIGH");
@@ -61,7 +80,9 @@ public class AlertServiceTest {
         alert1.setAcknowledgedAt(null);
         alert1.setLastNotifiedAt(createdAt);
         alert1.setResolvedAt(null);
+        alert1.setRuleAssignment(instance1);
 
+        alert2 = new Alert();
         alert2.setId(2L);
         alert2.setStatus("CLOSED");
         alert2.setSeverity("LOW");
@@ -70,9 +91,15 @@ public class AlertServiceTest {
         alert2.setAcknowledgedAt(createdAt);
         alert2.setLastNotifiedAt(createdAt);
         alert2.setResolvedAt(LocalDateTime.of(2026, 9, 1, 12, 0));
-
-        alert1.setRuleAssignment(instance1);
         alert2.setRuleAssignment(instance2);
+
+        alert3 = new Alert();
+        alert3.setId(3L);
+        alert3.setStatus("OPEN");
+        alert3.setSeverity("HIGH");
+        alert3.setNotificationCount(0);
+        alert3.setCreatedAt(LocalDateTime.of(2026, 9, 10, 11, 0));
+        alert3.setRuleAssignment(instance3);
 
     }
 
@@ -182,6 +209,31 @@ public class AlertServiceTest {
 
         verify(alertRepository).findById(99L);
         verify(alertRepository, never()).save(any());
+    }
+
+    @Test
+    void returnsMappedAlertsBasedOnRuleAssignmentAssetId() {
+        when(alertRepository.findByRuleAssignment_Asset_Id(2L)).thenReturn(List.of(alert2, alert3));
+
+        List<AlertResponseDto> responses = alertService.getAlertByRuleAssignmentAssetId(2L);
+
+        assertEquals(2, responses.size());
+        assertEquals(2L, responses.get(0).getId());
+        assertEquals(3L, responses.get(1).getId());
+
+        verify(alertRepository).findByRuleAssignment_Asset_Id(2L);
+
+    }
+
+    @Test
+    void returnsEmptyListWhenNoAlertsExistForAsset() {
+        when(alertRepository.findByRuleAssignment_Asset_Id(99L)).thenReturn(List.of());
+
+        List<AlertResponseDto> responses = alertService.getAlertByRuleAssignmentAssetId(99L);
+
+        assertTrue(responses.isEmpty());
+
+        verify(alertRepository).findByRuleAssignment_Asset_Id(99L);
     }
 
 }

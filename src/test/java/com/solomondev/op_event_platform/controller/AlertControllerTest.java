@@ -23,159 +23,184 @@ import com.solomondev.op_event_platform.service.AlertService;
 
 @WebMvcTest(AlertController.class)
 public class AlertControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockitoBean
-    private AlertService alertService;
+        @MockitoBean
+        private AlertService alertService;
 
-    private AlertResponseDto alert1;
+        private AlertResponseDto alert1;
 
-    private AlertResponseDto alert2;
+        private AlertResponseDto alert2;
 
-    @BeforeEach
-    void setUp() {
-        LocalDateTime createdAt = LocalDateTime.now();
-        alert1 = new AlertResponseDto(
-                1L, 10L, "OPEN", "HIGH", 1,
-                createdAt, createdAt, createdAt, createdAt);
+        @BeforeEach
+        void setUp() {
+                LocalDateTime createdAt = LocalDateTime.now();
+                alert1 = new AlertResponseDto(
+                                1L, 10L, "OPEN", "HIGH", 1,
+                                createdAt, createdAt, createdAt, createdAt);
 
-        alert2 = new AlertResponseDto(
-                2L, 20L, "OPEN", "MEDIUM", 0,
-                createdAt, createdAt, createdAt, createdAt);
-    }
+                alert2 = new AlertResponseDto(
+                                2L, 20L, "OPEN", "MEDIUM", 0,
+                                createdAt, createdAt, createdAt, createdAt);
 
-    @Test
-    void returnsAlertsWhenAlertsExist() throws Exception {
-        when(alertService.getAllAlerts()).thenReturn(List.of(alert1, alert2));
+        }
 
-        mockMvc.perform(get("/api/alerts"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].status").value("OPEN"))
-                .andExpect(jsonPath("$[0].severity").value("HIGH"));
+        @Test
+        void returnsAlertsWhenAlertsExist() throws Exception {
+                when(alertService.getAllAlerts()).thenReturn(List.of(alert1, alert2));
 
-        verify(alertService, times(1)).getAllAlerts();
-    }
+                mockMvc.perform(get("/api/alerts"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(2))
+                                .andExpect(jsonPath("$[0].id").value(1))
+                                .andExpect(jsonPath("$[0].status").value("OPEN"))
+                                .andExpect(jsonPath("$[0].severity").value("HIGH"));
 
-    @Test
-    void returnsEmptyListWhenNoAlertsExist() throws Exception {
-        when(alertService.getAllAlerts()).thenReturn(List.of());
+                verify(alertService, times(1)).getAllAlerts();
+        }
 
-        mockMvc.perform(get("/api/alerts"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+        @Test
+        void returnsEmptyListWhenNoAlertsExist() throws Exception {
+                when(alertService.getAllAlerts()).thenReturn(List.of());
 
-        verify(alertService, times(1)).getAllAlerts();
-    }
+                mockMvc.perform(get("/api/alerts"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(0));
 
-    @Test
-    void returnsAllAlertsWhenNoStatusParameterIsProvided() throws Exception {
+                verify(alertService, times(1)).getAllAlerts();
+        }
 
-        when(alertService.getAllAlerts()).thenReturn(List.of(alert1, alert2));
+        @Test
+        void returnsAllAlertsWhenNoStatusParameterIsProvided() throws Exception {
 
-        mockMvc.perform(get("/api/alerts"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                when(alertService.getAllAlerts()).thenReturn(List.of(alert1, alert2));
 
-        verify(alertService, times(1)).getAllAlerts();
+                mockMvc.perform(get("/api/alerts"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(2));
 
-    }
+                verify(alertService, times(1)).getAllAlerts();
 
-    @Test
-    void returnsMappedAlertWhenStatusIsProvided() throws Exception {
-        when(alertService.getAlertsByStatus("OPEN")).thenReturn(List.of(alert1, alert2));
+        }
 
-        mockMvc.perform(get("/api/alerts").param("status", "OPEN"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].status").value("OPEN"));
+        @Test
+        void returnsMappedAlertWhenStatusIsProvided() throws Exception {
+                when(alertService.getAlertsByStatus("OPEN")).thenReturn(List.of(alert1, alert2));
 
-        verify(alertService, times(1)).getAlertsByStatus("OPEN");
-    }
+                mockMvc.perform(get("/api/alerts").param("status", "OPEN"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(2))
+                                .andExpect(jsonPath("$[0].status").value("OPEN"));
 
-    @Test
-    void returnsMappedAlertById() throws Exception {
-        when(alertService.getAlertById(1L)).thenReturn(alert1);
+                verify(alertService, times(1)).getAlertsByStatus("OPEN");
+        }
 
-        mockMvc.perform(get("/api/alerts/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.ruleAssignmentId").value(10))
-                .andExpect(jsonPath("$.status").value("OPEN"));
+        @Test
+        void returnsMappedAlertById() throws Exception {
+                when(alertService.getAlertById(1L)).thenReturn(alert1);
 
-        verify(alertService, times(1)).getAlertById(1L);
-    }
+                mockMvc.perform(get("/api/alerts/1"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value(1))
+                                .andExpect(jsonPath("$.ruleAssignmentId").value(10))
+                                .andExpect(jsonPath("$.status").value("OPEN"));
 
-    @Test
-    void returnsExceptionWhenAlertDoesNotExist() throws Exception {
-        when(alertService.getAlertById(99L))
-                .thenThrow(new ResourceNotFoundException(
-                        "Alert not found with id: " + 99L));
+                verify(alertService, times(1)).getAlertById(1L);
+        }
 
-        mockMvc.perform(get("/api/alerts/99"))
-                .andExpect(status().isNotFound());
+        @Test
+        void returnsExceptionWhenAlertDoesNotExist() throws Exception {
+                when(alertService.getAlertById(99L))
+                                .thenThrow(new ResourceNotFoundException(
+                                                "Alert not found with id: " + 99L));
 
-        verify(alertService).getAlertById(99L);
-    }
+                mockMvc.perform(get("/api/alerts/99"))
+                                .andExpect(status().isNotFound());
 
-    @Test
-    void acknowledgesAlertWhenAlertExists() throws Exception {
+                verify(alertService).getAlertById(99L);
+        }
 
-        alert1.setStatus("ACKNOWLEDGED");
-        alert1.setAcknowledgedAt(LocalDateTime.of(2026, 9, 9, 11, 30));
+        @Test
+        void acknowledgesAlertWhenAlertExists() throws Exception {
 
-        when(alertService.acknowledgeAlert(1L)).thenReturn(alert1);
+                alert1.setStatus("ACKNOWLEDGED");
+                alert1.setAcknowledgedAt(LocalDateTime.of(2026, 9, 9, 11, 30));
 
-        mockMvc.perform(patch("/api/alerts/1/acknowledge"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"))
-                .andExpect(jsonPath("$.acknowledgedAt").exists());
+                when(alertService.acknowledgeAlert(1L)).thenReturn(alert1);
 
-        verify(alertService).acknowledgeAlert(1L);
-    }
+                mockMvc.perform(patch("/api/alerts/1/acknowledge"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value(1))
+                                .andExpect(jsonPath("$.status").value("ACKNOWLEDGED"))
+                                .andExpect(jsonPath("$.acknowledgedAt").exists());
 
-    @Test
-    void returnsNotFoundWhenAcknowledgingMissingAlert() throws Exception {
-        when(alertService.acknowledgeAlert(99L))
-                .thenThrow(new ResourceNotFoundException(
-                        "Alert not found with id: 99"));
+                verify(alertService).acknowledgeAlert(1L);
+        }
 
-        mockMvc.perform(patch("/api/alerts/99/acknowledge"))
-                .andExpect(status().isNotFound());
+        @Test
+        void returnsNotFoundWhenAcknowledgingMissingAlert() throws Exception {
+                when(alertService.acknowledgeAlert(99L))
+                                .thenThrow(new ResourceNotFoundException(
+                                                "Alert not found with id: 99"));
 
-        verify(alertService).acknowledgeAlert(99L);
-    }
+                mockMvc.perform(patch("/api/alerts/99/acknowledge"))
+                                .andExpect(status().isNotFound());
 
-    @Test
-    void resolvesAlertWhenAlertExists() throws Exception {
+                verify(alertService).acknowledgeAlert(99L);
+        }
 
-        alert1.setStatus("RESOLVED");
-        alert1.setResolvedAt(LocalDateTime.of(2026, 9, 9, 11, 30));
+        @Test
+        void resolvesAlertWhenAlertExists() throws Exception {
 
-        when(alertService.resolveAlert(1L)).thenReturn(alert1);
+                alert1.setStatus("RESOLVED");
+                alert1.setResolvedAt(LocalDateTime.of(2026, 9, 9, 11, 30));
 
-        mockMvc.perform(patch("/api/alerts/1/resolve"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.status").value("RESOLVED"))
-                .andExpect(jsonPath("$.resolvedAt").exists());
+                when(alertService.resolveAlert(1L)).thenReturn(alert1);
 
-        verify(alertService).resolveAlert(1L);
-    }
+                mockMvc.perform(patch("/api/alerts/1/resolve"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.id").value(1))
+                                .andExpect(jsonPath("$.status").value("RESOLVED"))
+                                .andExpect(jsonPath("$.resolvedAt").exists());
 
-    @Test
-    void returnsNotFoundWhenResolvingMissingAlert() throws Exception {
-        when(alertService.resolveAlert(99L))
-                .thenThrow(new ResourceNotFoundException(
-                        "Alert not found with id: 99"));
+                verify(alertService).resolveAlert(1L);
+        }
 
-        mockMvc.perform(patch("/api/alerts/99/resolve"))
-                .andExpect(status().isNotFound());
+        @Test
+        void returnsNotFoundWhenResolvingMissingAlert() throws Exception {
+                when(alertService.resolveAlert(99L))
+                                .thenThrow(new ResourceNotFoundException(
+                                                "Alert not found with id: 99"));
 
-        verify(alertService).resolveAlert(99L);
-    }
+                mockMvc.perform(patch("/api/alerts/99/resolve"))
+                                .andExpect(status().isNotFound());
+
+                verify(alertService).resolveAlert(99L);
+        }
+
+        @Test
+        void returnsAlertsByAssetId() throws Exception {
+                // Tell the mocked service what to return when the controller asks for
+                // alerts associated with asset ID 2.
+                when(alertService.getAlertByRuleAssignmentAssetId(2L))
+                                .thenReturn(List.of(alert1, alert2));
+
+                // Send a simulated HTTP GET request to the controller with assetId=2.
+                mockMvc.perform(get("/api/alerts?assetId=2"))
+
+                                // Verify that the endpoint returns HTTP 200 OK.
+                                .andExpect(status().isOk())
+
+                                // Verify that the first alert in the JSON response has ID 1.
+                                .andExpect(jsonPath("$[0].id").value(1))
+
+                                // Verify that the second alert in the JSON response has ID 2.
+                                .andExpect(jsonPath("$[1].id").value(2));
+
+                // Verify that the controller delegated to the correct service method
+                // and passed the query parameter value as Long 2L.
+                verify(alertService).getAlertByRuleAssignmentAssetId(2L);
+        }
 
 }

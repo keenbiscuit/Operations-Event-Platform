@@ -7,4 +7,6 @@ import java.util.List;
 public interface AlertRepository extends JpaRepository<Alert, Long> {
 
     List<Alert> findByStatus(String status);
+
+    List<Alert> findByRuleAssignment_Asset_Id(Long id);
 }
