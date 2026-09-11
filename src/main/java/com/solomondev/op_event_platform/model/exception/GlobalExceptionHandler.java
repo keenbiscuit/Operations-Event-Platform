@@ -3,6 +3,7 @@ package com.solomondev.op_event_platform.model.exception;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,34 +11,46 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> handleResourceNotFoundException(ResourceNotFoundException exception) {
 
-        ApiError apiError = new ApiError(
-                HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(),
-                exception.getMessage());
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException exception) {
+                FieldError fieldError = exception.getBindingResult().getFieldError();
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
-    }
+                String message = fieldError != null
+                                ? fieldError.getField() + ": " +
+                                                fieldError.getDefaultMessage()
+                                : "Request validation failed";
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException exception) {
-        FieldError fieldError = exception.getBindingResult().getFieldError();
+                ApiError apiError = new ApiError(
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                message
 
-        String message = fieldError != null
-                ? fieldError.getField() + ": " +
-                        fieldError.getDefaultMessage()
-                : "Request validation failed";
+                );
 
-        ApiError apiError = new ApiError(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                message
+                return ResponseEntity.badRequest().body(apiError);
+        }
 
-        );
+        @ExceptionHandler(ResourceNotFoundException.class)
+        public ResponseEntity<ApiError> handleResourceNotFoundException(ResourceNotFoundException exception) {
 
-        return ResponseEntity.badRequest().body(apiError);
-    }
+                ApiError apiError = new ApiError(
+                                HttpStatus.NOT_FOUND.value(),
+                                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                                exception.getMessage());
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
+        }
+
+        @ExceptionHandler(InvalidAlertStateException.class)
+        public ResponseEntity<ApiError> handleInvalidAlertStateException(InvalidAlertStateException exception) {
+
+                ApiError apiError = new ApiError(
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                exception.getMessage());
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+        }
 
 }

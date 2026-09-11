@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.solomondev.op_event_platform.repository.AlertRepository;
 import com.solomondev.op_event_platform.entity.*;
 import com.solomondev.op_event_platform.model.dto.AlertResponseDto;
+import com.solomondev.op_event_platform.model.exception.InvalidAlertStateException;
 import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
@@ -234,6 +235,23 @@ public class AlertServiceTest {
         assertTrue(responses.isEmpty());
 
         verify(alertRepository).findByRuleAssignment_Asset_Id(99L);
+    }
+
+    @Test
+    void throwsExceptionWhenAcknowledgingResolvedAlert() {
+        alert1.setStatus("RESOLVED");
+        alert1.setResolvedAt(LocalDateTime.of(2026, 9, 11, 10, 30));
+
+        when(alertRepository.findById(1L)).thenReturn(Optional.of(alert1));
+
+        assertThrows(InvalidAlertStateException.class,
+                () -> alertService.acknowledgeAlert(1L));
+
+        assertEquals("RESOLVED", alert1.getStatus());
+        assertNotNull(alert1.getResolvedAt());
+
+        verify(alertRepository).findById(1L);
+        verify(alertRepository, never()).save(any());
     }
 
 }

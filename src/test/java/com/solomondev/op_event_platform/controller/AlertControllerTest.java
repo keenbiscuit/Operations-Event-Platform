@@ -18,6 +18,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.solomondev.op_event_platform.model.dto.AlertResponseDto;
+import com.solomondev.op_event_platform.model.exception.InvalidAlertStateException;
 import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 import com.solomondev.op_event_platform.service.AlertService;
 
@@ -203,4 +204,18 @@ public class AlertControllerTest {
                 verify(alertService).getAlertByRuleAssignmentAssetId(2L);
         }
 
+        @Test
+        void returnsBadRequestWhenAcknowledgingResolvedAlert() throws Exception {
+
+                when(alertService.acknowledgeAlert(1L))
+                                .thenThrow(new InvalidAlertStateException(
+                                                "Resolved alerts cannot be acknowledged"));
+
+                mockMvc.perform(patch("/api/alerts/1/acknowledge"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.message").value("Resolved alerts cannot be acknowledged"));
+
+                verify(alertService).acknowledgeAlert(1L);
+        }
 }
