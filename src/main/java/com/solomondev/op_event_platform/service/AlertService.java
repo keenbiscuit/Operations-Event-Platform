@@ -52,6 +52,14 @@ public class AlertService {
                 .toList();
     }
 
+    public List<AlertResponseDto> getAlertsByAssetIdAndStatus(Long assetId, String status) {
+
+        return alertRepository.findByRuleAssignment_Asset_IdAndStatus(assetId, status)
+                .stream()
+                .map(this::mapToResponseDto)
+                .toList();
+    }
+
     public AlertResponseDto acknowledgeAlert(Long id) {
         Alert alert = alertRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(

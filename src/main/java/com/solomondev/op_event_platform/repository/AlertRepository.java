@@ -9,4 +9,6 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     List<Alert> findByStatus(String status);
 
     List<Alert> findByRuleAssignment_Asset_Id(Long id);
+
+    List<Alert> findByRuleAssignment_Asset_IdAndStatus(Long id, String status);
 }

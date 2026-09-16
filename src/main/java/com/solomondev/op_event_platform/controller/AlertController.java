@@ -28,7 +28,9 @@ public class AlertController {
             @RequestParam(required = false) Long assetId) {
         List<AlertResponseDto> alerts;
 
-        if (assetId != null) {
+        if (assetId != null && status != null)
+            alerts = alertService.getAlertsByAssetIdAndStatus(assetId, status);
+        else if (assetId != null) {
             alerts = alertService.getAlertByRuleAssignmentAssetId(assetId);
         } else if (status != null)
             alerts = alertService.getAlertsByStatus(status);

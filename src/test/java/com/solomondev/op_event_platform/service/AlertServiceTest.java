@@ -271,4 +271,33 @@ public class AlertServiceTest {
         verify(alertRepository, never()).save(any());
     }
 
+    @Test
+    void returnsMappedAlertsBasedOnAssetIdAndStatus() {
+        when(alertRepository.findByRuleAssignment_Asset_IdAndStatus(1L, "OPEN"))
+                .thenReturn(List.of(alert1, alert3));
+
+        List<AlertResponseDto> responses = alertService.getAlertsByAssetIdAndStatus(1L, "OPEN");
+
+        assertEquals(2, responses.size());
+        assertEquals(1L, responses.get(0).getId());
+        assertEquals(3L, responses.get(1).getId());
+        assertEquals("OPEN", responses.get(0).getStatus());
+        assertEquals("OPEN", responses.get(1).getStatus());
+
+        verify(alertRepository).findByRuleAssignment_Asset_IdAndStatus(1L, "OPEN");
+    }
+
+    @Test
+    void returnsEmptyListWhenNoAlertsMatchAssetIdAndStatus() {
+        when(alertRepository.findByRuleAssignment_Asset_IdAndStatus(99L, "CLOSED"))
+                .thenReturn(List.of());
+
+        List<AlertResponseDto> responses = alertService.getAlertsByAssetIdAndStatus(99L, "CLOSED");
+
+        assertTrue(responses.isEmpty());
+
+        verify(alertRepository).findByRuleAssignment_Asset_IdAndStatus(99L, "CLOSED");
+
+    }
+
 }

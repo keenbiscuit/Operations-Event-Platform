@@ -205,6 +205,27 @@ public class AlertControllerTest {
         }
 
         @Test
+        void returnsAlertsByAssetIdAndStatus() throws Exception {
+                // Tell the mocked service what to return when the controller asks for
+                // alerts associated with asset ID 1.
+                when(alertService.getAlertsByAssetIdAndStatus(1L, "OPEN"))
+                                .thenReturn(List.of(alert1, alert2));
+
+                mockMvc.perform(get("/api/alerts")
+                                .param("assetId", "1")
+                                .param("status", "OPEN"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$[0].id").value(1))
+                                .andExpect(jsonPath("$[0].status").value("OPEN"))
+                                .andExpect(jsonPath("$[1].id").value(2))
+                                .andExpect(jsonPath("$[1].status").value("OPEN"));
+
+                // Verify that the controller delegated to the correct service method
+                // and passed the query parameter value as Long 1L.
+                verify(alertService).getAlertsByAssetIdAndStatus(1L, "OPEN");
+        }
+
+        @Test
         void returnsBadRequestWhenAcknowledgingResolvedAlert() throws Exception {
 
                 when(alertService.acknowledgeAlert(1L))
