@@ -1,5 +1,7 @@
 # Operations Event Platform
 
+[![Maven CI](https://github.com/keenbiscuit/Operations-Event-Platform/actions/workflows/maven-ci.yml/badge.svg?branch=main)](https://github.com/keenbiscuit/Operations-Event-Platform/actions/workflows/maven-ci.yml)
+
 A Java and Spring Boot backend for ingesting operational events, evaluating asset-specific rules, and creating alerts when an event matches a configured rule.
 
 The project models an operations-monitoring workflow: an asset sends an event, the platform persists it, evaluates applicable rules, creates auditable alerts for matches, and exposes REST endpoints to retrieve and manage the alert lifecycle.
