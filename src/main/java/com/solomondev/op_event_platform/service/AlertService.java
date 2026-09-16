@@ -75,6 +75,10 @@ public class AlertService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Alert not found with id: " + id));
 
+        if ("RESOLVED".equals(alert.getStatus())) {
+            throw new InvalidAlertStateException("Resolved alerts cannot be acknowledged");
+        }
+
         alert.setStatus("RESOLVED");
         alert.setResolvedAt(LocalDateTime.now());
 

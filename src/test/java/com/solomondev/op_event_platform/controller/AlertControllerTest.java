@@ -218,4 +218,19 @@ public class AlertControllerTest {
 
                 verify(alertService).acknowledgeAlert(1L);
         }
+
+        @Test
+        void returnsBadRequestWhenResolvingAlreadyResolvedAlert() throws Exception {
+                when(alertService.resolveAlert(1L))
+                                .thenThrow(new InvalidAlertStateException(
+                                                "Resolved alerts cannot be resolved again"));
+
+                mockMvc.perform(patch("/api/alerts/1/resolve"))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.status").value(400))
+                                .andExpect(jsonPath("$.message")
+                                                .value("Resolved alerts cannot be resolved again"));
+
+                verify(alertService).resolveAlert(1L);
+        }
 }

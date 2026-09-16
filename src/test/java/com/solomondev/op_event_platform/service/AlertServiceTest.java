@@ -254,4 +254,21 @@ public class AlertServiceTest {
         verify(alertRepository, never()).save(any());
     }
 
+    @Test
+    void throwsExceptionWhenResolvingResolvedAlert() {
+        alert1.setStatus("RESOLVED");
+        alert1.setResolvedAt(LocalDateTime.of(2026, 9, 11, 10, 30));
+
+        when(alertRepository.findById(1L)).thenReturn(Optional.of(alert1));
+
+        assertThrows(InvalidAlertStateException.class,
+                () -> alertService.resolveAlert(1L));
+
+        assertEquals("RESOLVED", alert1.getStatus());
+        assertNotNull(alert1.getResolvedAt());
+
+        verify(alertRepository).findById(1L);
+        verify(alertRepository, never()).save(any());
+    }
+
 }
