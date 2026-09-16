@@ -17,7 +17,7 @@ import com.solomondev.op_event_platform.entity.Rule;
 import com.solomondev.op_event_platform.entity.RuleAssignment;
 import com.solomondev.op_event_platform.entity.enums.RuleOperator;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

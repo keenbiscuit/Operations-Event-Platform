@@ -61,7 +61,7 @@ public class RuleEvaluationServiceTest {
     }
 
     @Test
-    public void returnsFalseWhenWrongAsset() {
+    public void returnsFalseWhenEventAssetDoesNotMatchAssignmentAsset() {
         Asset secondAsset = new Asset();
         asset.setId(2L);
         assignment.setAsset(secondAsset);

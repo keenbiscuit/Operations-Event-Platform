@@ -28,7 +28,7 @@ import com.solomondev.op_event_platform.model.exception.InvalidAlertStateExcepti
 import com.solomondev.op_event_platform.model.exception.ResourceNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
-public class AlertServiceTest {
+class AlertServiceTest {
     @Mock
     private AlertRepository alertRepository;
 
@@ -273,6 +273,8 @@ public class AlertServiceTest {
 
     @Test
     void returnsMappedAlertsBasedOnAssetIdAndStatus() {
+        // Returns two alerts with open status
+
         when(alertRepository.findByRuleAssignment_Asset_IdAndStatus(1L, "OPEN"))
                 .thenReturn(List.of(alert1, alert3));
 

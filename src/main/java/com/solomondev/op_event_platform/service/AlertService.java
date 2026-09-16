@@ -84,7 +84,7 @@ public class AlertService {
                         "Alert not found with id: " + id));
 
         if ("RESOLVED".equals(alert.getStatus())) {
-            throw new InvalidAlertStateException("Resolved alerts cannot be acknowledged");
+            throw new InvalidAlertStateException("Resolved alerts cannot be resolved again");
         }
 
         alert.setStatus("RESOLVED");
