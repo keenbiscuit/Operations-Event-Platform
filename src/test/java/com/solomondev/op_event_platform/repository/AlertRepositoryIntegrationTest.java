@@ -1,5 +1,6 @@
 package com.solomondev.op_event_platform.repository;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -18,6 +19,7 @@ import com.solomondev.op_event_platform.entity.RuleAssignment;
 import com.solomondev.op_event_platform.entity.enums.RuleOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -42,6 +44,11 @@ class AlertRepositoryIntegrationTest {
     @Autowired
     private RuleAssignmentRepository ruleAssignmentRepository;
 
+    private Org org;
+    private Asset asset;
+    private Rule rule;
+    private RuleAssignment ruleAssignment;
+
     @TestConfiguration(proxyBeanMethods = false)
     static class ContainerConfiguration {
 
@@ -52,32 +59,37 @@ class AlertRepositoryIntegrationTest {
         }
     }
 
-    @Test
-    void findsAlertsByAssetIdAndStatus() {
-        Org org = new Org();
+    @BeforeEach
+    void setUp() {
+        org = new Org();
         org.setName("Test Org");
         org = orgRepository.save(org);
 
-        Asset asset = new Asset();
+        asset = new Asset();
         asset.setName("Payment Service");
         asset.setType("SERVICE");
         asset.setOrg(org);
         asset = assetRepository.save(asset);
 
-        Rule rule = new Rule();
+        rule = new Rule();
         rule.setConditionType("CPU_USAGE");
         rule.setThreshold(new BigDecimal("80.00"));
         rule.setOperator(RuleOperator.GREATER_THAN);
         rule.setOrg(org);
         rule = ruleRepository.save(rule);
 
-        RuleAssignment ruleAssignment = new RuleAssignment();
+        ruleAssignment = new RuleAssignment();
         ruleAssignment.setAsset(asset);
         ruleAssignment.setRule(rule);
         ruleAssignment.setSeverity("HIGH");
         ruleAssignment.setThreshold(new BigDecimal("80.00"));
         ruleAssignment.setEnabled(true);
         ruleAssignment = ruleAssignmentRepository.save(ruleAssignment);
+
+    }
+
+    @Test
+    void findsAlertsByAssetIdAndStatus() {
 
         Alert openAlert = new Alert();
         openAlert.setRuleAssignment(ruleAssignment);
@@ -100,5 +112,21 @@ class AlertRepositoryIntegrationTest {
         assertEquals(1, results.size());
         assertEquals(openAlert.getId(), results.get(0).getId());
         assertEquals("OPEN", results.get(0).getStatus());
+    }
+
+    @Test
+    void returnsNoAlertsWhenStatusDoesNotMatch() {
+        Alert openAlert = new Alert();
+        openAlert.setRuleAssignment(ruleAssignment);
+        openAlert.setStatus("OPEN");
+        openAlert.setSeverity("HIGH");
+        openAlert.setCreatedAt(LocalDateTime.now());
+        alertRepository.save(openAlert);
+
+        List<Alert> results = alertRepository.findByRuleAssignment_Asset_IdAndStatus(
+                asset.getId(),
+                "RESOLVED");
+
+        assertTrue(results.isEmpty());
     }
 }
