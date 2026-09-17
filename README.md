@@ -156,14 +156,12 @@ The project uses multiple test layers:
 
 Integration tests use an isolated PostgreSQL Testcontainers database. They do not depend on the Docker Compose development database.
 
-## API Documentation and Health
+## Application Health
 
 When the application is running locally:
 
 | Resource | URL |
 |---|---|
-| Swagger UI | `http://localhost:8080/swagger-ui/index.html` |
-| OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
 | Application health | `http://localhost:8080/actuator/health` |
 
 ## CI
