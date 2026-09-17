@@ -3,9 +3,9 @@ spring:
     name: ops-event-platform
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/ops_platform
-    username: ops_platform
-    password: ops_platform_dev_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ops_platform}
+    username: ${SPRING_DATASOURCE_USERNAME:ops_platform}
+    password: ${SPRING_DATASOURCE_PASSWORD:ops_platform_dev_password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -25,4 +25,4 @@ spring:
     baseline-on-migrate: true
 
 server:
-  port: 8080
+  port: ${PORT:8080}
