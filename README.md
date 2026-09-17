@@ -112,7 +112,7 @@ Lifecycle safeguards:
 - Java 17
 - Maven
 - PostgreSQL
-- Docker (optional, for running PostgreSQL in a container)
+- Docker Desktop or Docker Engine
 
  ### Configure PostgreSQL
 
@@ -145,3 +145,36 @@ http://localhost:8080
 ```bash
 mvn test
 ```
+## Testing Strategy
+
+The project uses multiple test layers:
+
+- Unit tests for rule evaluation, event ingestion orchestration, event processing, and alert lifecycle business rules
+- MVC/controller tests with MockMvc for request routing, HTTP responses, validation, and API error handling
+- PostgreSQL integration tests with Testcontainers for Flyway migrations, JPA mappings, and alert repository queries
+- An end-to-end persistence workflow test that verifies event ingestion can create an alert and an alert-event audit record through the real service stack
+
+Integration tests use an isolated PostgreSQL Testcontainers database. They do not depend on the Docker Compose development database.
+
+## API Documentation and Health
+
+When the application is running locally:
+
+| Resource | URL |
+|---|---|
+| Swagger UI | `http://localhost:8080/swagger-ui/index.html` |
+| OpenAPI JSON | `http://localhost:8080/v3/api-docs` |
+| Application health | `http://localhost:8080/actuator/health` |
+
+## CI
+
+GitHub Actions runs the Maven test suite on pushes and pull requests to `main`.
+
+## Future Improvements
+
+- Add authentication and organization-based authorization
+- Add pagination and sorting for alert queries
+- Add alert deduplication and notification delivery
+- Use `Instant`/timezone-aware timestamps for production deployments
+- Add database indexes based on production query patterns
+- Containerize the application and deploy it to a cloud environment
