@@ -129,4 +129,42 @@ class AlertRepositoryIntegrationTest {
 
         assertTrue(results.isEmpty());
     }
+
+    @Test
+    void excludesAlertsFromAnotherAsset() {
+        Alert matchingAlert = new Alert();
+        matchingAlert.setRuleAssignment(ruleAssignment);
+        matchingAlert.setStatus("OPEN");
+        matchingAlert.setSeverity("HIGH");
+        matchingAlert.setCreatedAt(LocalDateTime.now());
+        matchingAlert = alertRepository.save(matchingAlert);
+
+        Asset otherAsset = new Asset();
+        otherAsset.setName("Order Database");
+        otherAsset.setType("DATABASE");
+        otherAsset.setOrg(org);
+        otherAsset = assetRepository.save(otherAsset);
+
+        RuleAssignment otherAssignment = new RuleAssignment();
+        otherAssignment.setAsset(otherAsset);
+        otherAssignment.setRule(rule);
+        otherAssignment.setSeverity("HIGH");
+        otherAssignment.setThreshold(new BigDecimal("80.00"));
+        otherAssignment.setEnabled(true);
+        otherAssignment = ruleAssignmentRepository.save(otherAssignment);
+
+        Alert otherAssetAlert = new Alert();
+        otherAssetAlert.setRuleAssignment(otherAssignment);
+        otherAssetAlert.setStatus("OPEN");
+        otherAssetAlert.setSeverity("HIGH");
+        otherAssetAlert.setCreatedAt(LocalDateTime.now());
+        alertRepository.save(otherAssetAlert);
+
+        List<Alert> results = alertRepository.findByRuleAssignment_Asset_IdAndStatus(
+                asset.getId(),
+                "OPEN");
+
+        assertEquals(1, results.size());
+        assertEquals(matchingAlert.getId(), results.get(0).getId());
+    }
 }
