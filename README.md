@@ -6,6 +6,12 @@ A Java and Spring Boot backend for ingesting operational events, evaluating asse
 
 The project models an operations-monitoring workflow: an asset sends an event, the platform persists it, evaluates applicable rules, creates auditable alerts for matches, and exposes REST endpoints to retrieve and manage the alert lifecycle.
 
+## Live Deployment
+
+The API is deployed on Railway.
+
+- Health check: `https://operations-event-platform-production.up.railway.app/actuator/health`
+
 ## Features
 
 - Ingest operational events through a REST API
