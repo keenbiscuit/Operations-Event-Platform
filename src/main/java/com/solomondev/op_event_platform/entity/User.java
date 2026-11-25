@@ -19,28 +19,24 @@ import lombok.Setter;
 @Setter
 public class User {
 
-    //Primary key
     @Id
-    //Added generated value to increment pk automatically
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //Not null
     @Column(nullable = false)
     private String username;
 
-    //Not null
     @Column(nullable = false)
     private String passwordHash;
 
-    // One-to-many relationship for bi-directional mapping
-    // Show me every org that the user is a member of
+    @Column(name = "external_subject", unique = true)
+    private String externalSubject;
+
     @OneToMany(mappedBy = "user")
     private List<OrgMembership> orgMemberships = new ArrayList<>();
 
-    // Helper method to add an OrgMembership
-    public void addMembership(OrgMembership m) {
-        orgMemberships.add(m);
-        m.setUser(this);
+    public void addMembership(OrgMembership membership) {
+        orgMemberships.add(membership);
+        membership.setUser(this);
     }
 }

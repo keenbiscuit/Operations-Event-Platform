@@ -1,6 +1,7 @@
 package com.solomondev.op_event_platform.model.exception;
 
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,15 @@ public class GlobalExceptionHandler {
 
                 );
 
+                return ResponseEntity.badRequest().body(apiError);
+        }
+
+        @ExceptionHandler(ConstraintViolationException.class)
+        public ResponseEntity<ApiError> handleConstraintViolation(ConstraintViolationException exception) {
+                ApiError apiError = new ApiError(
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                exception.getMessage());
                 return ResponseEntity.badRequest().body(apiError);
         }
 

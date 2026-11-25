@@ -2,67 +2,86 @@
 
 [![Maven CI](https://github.com/keenbiscuit/Operations-Event-Platform/actions/workflows/maven-ci.yml/badge.svg?branch=main)](https://github.com/keenbiscuit/Operations-Event-Platform/actions/workflows/maven-ci.yml)
 
-A Java and Spring Boot backend for ingesting operational events, evaluating asset-specific rules, and creating alerts when an event matches a configured rule.
-
-The project models an operations-monitoring workflow: an asset sends an event, the platform persists it, evaluates applicable rules, creates auditable alerts for matches, and exposes REST endpoints to retrieve and manage the alert lifecycle.
-
-## Live Deployment
-
-The API is deployed on Railway.
-
-- Health check: `https://operations-event-platform-production.up.railway.app/actuator/health`
+A Java and Spring Boot API for ingesting operational events, evaluating asset-specific rules, and creating auditable alerts. OIDC bearer tokens authenticate requests, and organization memberships determine which tenant data a user can access.
 
 ## Features
 
-- Ingest operational events through a REST API
-- Persist organizations, assets, events, rules, rule assignments, alerts, and alert-event audit records
-- Evaluate rule conditions against incoming event values
-- Create alerts automatically when assigned rules match
-- Retrieve all alerts, filter by status, filter by asset ID, or filter by both asset ID and status
-- Acknowledge and resolve alerts through lifecycle endpoints
-- Reject invalid lifecycle actions, including acknowledging a resolved alert or resolving an alert twice
-- Return consistent `404 Not Found` and validation/lifecycle `400 Bad Request` API errors
-- Manage the PostgreSQL schema with Flyway migrations
-- Cover service and MVC behavior with JUnit 5, Mockito, and MockMvc
+- Ingest events for assets the authenticated user’s organization can access
+- Evaluate rule assignments and create alerts with event audit links
+- Search and paginate events and alerts, including basic filters
+- View events, alerts, and alert-event history
+- Acknowledge and resolve alerts with lifecycle validation
+- Provide tenant-scoped dashboard counts
+- Validate PostgreSQL schema using Flyway migrations
+- Document REST endpoints with OpenAPI / Swagger UI
 
-## Event Processing Flow
+## Architecture
 
 ```text
-POST /api/events
-    -> Validate request
-    -> Load existing asset
-    -> Save event with server-generated occurredAt
-    -> Find rule assignments for the asset
-    -> Evaluate matching rules
-    -> Create an Alert and AlertEvent audit record for each matching assignment
-
+OIDC issuer -> JWT bearer token -> Spring Security resource server
+                                      |
+                                      v
+                             JWT subject lookup
+                                      |
+                                      v
+                         users.external_subject
+                                      |
+                                      v
+                         org_memberships tenant scope
+                                      |
+                                      v
+                 Spring MVC -> services -> JPA -> PostgreSQL
 ```
-## Tech Stack
 
-- Java 17
-- Spring Boot 4.1.0
-- Spring Web MVC
-- Spring Data JPA / Hibernate
-- PostgreSQL
-- Flyway
-- Maven
-- Lombok
-- JUnit 5
-- Mockito
-- MockMvc
-- Docker
+The API does not issue credentials or provision users. An administrator must map each OIDC issuer subject to a local user and assign organization memberships. Tenant checks are enforced in database queries and before event ingestion.
 
-## API Endpoints
+## Authentication and local setup
 
-### Create Event
+The API expects JWTs from a trusted OpenID Connect issuer. Set `OIDC_ISSUER_URI` to the issuer URL whose discovery metadata and signing keys should be trusted. Spring Security validates token signatures, issuer, and time claims. Send access tokens in the `Authorization: Bearer <token>` header.
+
+For local development, set these environment variables:
 
 ```text
-POST /api/events
+OIDC_ISSUER_URI=https://your-issuer.example.com/
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ops_platform
+SPRING_DATASOURCE_USERNAME=ops_platform
+SPRING_DATASOURCE_PASSWORD=your-local-password
 ```
 
-Creates and processes an operational event for an existing asset.
+The application requires a reachable PostgreSQL database. Flyway applies the migrations at startup, and Hibernate validates the resulting schema.
 
-Request body:
+### Provisioning tenant access
+
+1. Create a local `users` row for the person.
+2. Set `users.external_subject` to the exact `sub` claim from the validated JWT.
+3. Add an `org_memberships` row connecting that user to the organization they may access.
+
+The external subject must be unique. Existing users with no subject cannot access tenant data until mapped. The application intentionally has no public user-registration or membership-management endpoint.
+
+### Run
+
+Prerequisites: Java 17, Maven, PostgreSQL, and Docker for Testcontainers integration tests.
+
+```bash
+mvn spring-boot:run
+mvn test
+```
+
+The API starts at `http://localhost:8080`. The actuator health check is public at `GET /actuator/health`; application APIs require authentication.
+
+## API
+
+All API examples below require a valid bearer token and are scoped to the organizations mapped to its subject.
+
+### Events
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/events` | Validate, save, and process an event for an accessible asset |
+| `GET` | `/api/events` | Search events with pagination and filters |
+| `GET` | `/api/events/{id}` | Retrieve an event and linked alert summaries |
+
+Event request:
 
 ```json
 {
@@ -72,113 +91,59 @@ Request body:
 }
 ```
 
-- `assetId` must reference an existing asset
-- `eventType` must not be blank
-- `value` must be provided
-- `occurredAt` is generated by the server
+Search parameters: `q`, `status`, `severity`, `from`, `to`, `page`, `size`, and `direction`. Status and severity filter events that have a linked alert with the requested value. Pages are zero-based, default to 20 items, and are capped at 100.
 
-Responses:
-
-- `201 Created` — event was saved and processed
-- `400 Bad Request` — request validation failed
-- `404 Not Found` — asset does not exist
-
-### Retrieve Alerts
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/alerts` | Returns all alerts |
-| `GET` | `/api/alerts/{id}` | Returns one alert by ID |
-| `GET` | `/api/alerts?status=OPEN` | Returns alerts with the specified status |
-| `GET` | `/api/alerts?assetId=1` | Returns alerts associated with an asset |
-| `GET` | `/api/alerts?assetId=1&status=OPEN` | Returns alerts matching both asset ID and status |
-
-Responses:
-
-- `200 OK` — request succeeded; list endpoints return `[]` when no alerts match
-- `404 Not Found` — an alert with the requested ID does not exist
-
-### Alert Lifecycle
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `PATCH` | `/api/alerts/{id}/acknowledge` | Marks an alert as `ACKNOWLEDGED` and records `acknowledgedAt` |
-| `PATCH` | `/api/alerts/{id}/resolve` | Marks an alert as `RESOLVED` and records `resolvedAt` |
-
-Lifecycle safeguards:
-
-- A resolved alert cannot be acknowledged
-- A resolved alert cannot be resolved again
-- Invalid lifecycle actions return `400 Bad Request`
-
-## Local Setup
-
-### Prerequisites
-
-- Java 17
-- Maven
-- PostgreSQL
-- Docker Desktop or Docker Engine
-
- ### Configure PostgreSQL
-
-Create a PostgreSQL database and configure the datasource values in your local application configuration.
-
-Example properties:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/ops_platform
-spring.datasource.username=your_database_user
-spring.datasource.password=your_database_password
-```
-
-Flyway runs automatically when the application starts and applies the schema migrations.
-
-### Run the Application
-
-```bash
-mvn spring-boot:run
-```
-
-The API starts locally at:
+Example:
 
 ```text
-http://localhost:8080
+GET /api/events?q=cpu&severity=HIGH&page=0&size=20&direction=DESC
 ```
 
-### Run Tests
+A successful event creation returns `201 Created`, a `Location: /api/events/{id}` header, and the event representation. Invalid request data returns `400`; a missing or inaccessible asset returns `404`.
 
-```bash
-mvn test
+### Alerts
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/alerts` | Search and paginate alerts |
+| `GET` | `/api/alerts/{id}` | Retrieve an alert and linked event history |
+| `PATCH` | `/api/alerts/{id}/acknowledge` | Mark an alert acknowledged |
+| `PATCH` | `/api/alerts/{id}/resolve` | Resolve an alert |
+
+Search parameters: `status`, `severity`, `assetId`, `q`, `from`, `to`, `page`, `size`, and `direction`. Search text matches asset names and linked event types. Alert time filters use the alert creation time.
+
+A resolved alert cannot be acknowledged or resolved again. Inaccessible alert IDs return `404`, which avoids confirming another tenant’s resources exist.
+
+### Dashboard summary
+
+`GET /api/dashboard/summary` returns tenant-scoped counts:
+
+```json
+{
+  "totalEvents": 25,
+  "activeAlerts": 3,
+  "acknowledgedAlerts": 2,
+  "resolvedAlerts": 11
+}
 ```
-## Testing Strategy
 
-The project uses multiple test layers:
+### API documentation
 
-- Unit tests for rule evaluation, event ingestion orchestration, event processing, and alert lifecycle business rules
-- MVC/controller tests with MockMvc for request routing, HTTP responses, validation, and API error handling
-- PostgreSQL integration tests with Testcontainers for Flyway migrations, JPA mappings, and alert repository queries
-- An end-to-end persistence workflow test that verifies event ingestion can create an alert and an alert-event audit record through the real service stack
+When the application is running, OpenAPI is available at `/v3/api-docs` and Swagger UI at `/swagger-ui.html`. These endpoints are protected like other application endpoints.
 
-Integration tests use an isolated PostgreSQL Testcontainers database. They do not depend on the Docker Compose development database.
+## Testing
 
-## Application Health
+- Unit tests cover event ingestion, event processing, rule evaluation, and alert lifecycle behavior.
+- MVC tests cover request validation, response contracts, pagination, and error mapping.
+- PostgreSQL Testcontainers tests cover migrations, JPA mappings, tenant-scoped alert queries, and the event-to-alert persistence workflow.
+- Security tests cover rejecting requests without authentication and accepting authenticated JWT requests.
 
-When the application is running locally:
+Run the suite with `mvn test`. Docker must be running for Testcontainers tests.
 
-| Resource | URL |
-|---|---|
-| Application health | `http://localhost:8080/actuator/health` |
+## Deployment configuration
 
-## CI
+Configure `OIDC_ISSUER_URI` and the `SPRING_DATASOURCE_*` variables in the deployment environment. Do not commit issuer secrets, client secrets, signing keys, or production database credentials. The API is a resource server; the OIDC provider handles login and token issuance.
 
-GitHub Actions runs the Maven test suite on pushes and pull requests to `main`.
+## Technology
 
-## Future Improvements
-
-- Add authentication and organization-based authorization
-- Add pagination and sorting for alert queries
-- Add alert deduplication and notification delivery
-- Use `Instant`/timezone-aware timestamps for production deployments
-- Add database indexes based on production query patterns
-- Containerize the application and deploy it to a cloud environment
+Java 17 · Spring Boot 4.1 · Spring Security OAuth2 Resource Server · Spring Data JPA · PostgreSQL · Flyway · Maven · JUnit 5 · Mockito · MockMvc · Testcontainers · Docker
