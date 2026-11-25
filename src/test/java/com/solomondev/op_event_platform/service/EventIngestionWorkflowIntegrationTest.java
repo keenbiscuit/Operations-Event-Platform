@@ -1,6 +1,7 @@
 package com.solomondev.op_event_platform.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -21,16 +23,20 @@ import com.solomondev.op_event_platform.entity.AlertEvent;
 import com.solomondev.op_event_platform.entity.Asset;
 import com.solomondev.op_event_platform.entity.Event;
 import com.solomondev.op_event_platform.entity.Org;
+import com.solomondev.op_event_platform.entity.OrgMembership;
 import com.solomondev.op_event_platform.entity.Rule;
 import com.solomondev.op_event_platform.entity.RuleAssignment;
+import com.solomondev.op_event_platform.entity.User;
 import com.solomondev.op_event_platform.entity.enums.RuleOperator;
 import com.solomondev.op_event_platform.model.dto.CreateEventRequestDto;
 import com.solomondev.op_event_platform.repository.AlertEventRepository;
 import com.solomondev.op_event_platform.repository.AlertRepository;
 import com.solomondev.op_event_platform.repository.AssetRepository;
+import com.solomondev.op_event_platform.repository.OrgMembershipRepository;
 import com.solomondev.op_event_platform.repository.OrgRepository;
 import com.solomondev.op_event_platform.repository.RuleAssignmentRepository;
 import com.solomondev.op_event_platform.repository.RuleRepository;
+import com.solomondev.op_event_platform.repository.UserRepository;
 
 @DataJpaTest
 @Testcontainers
@@ -45,33 +51,31 @@ class EventIngestionWorkflowIntegrationTest {
 
     @Autowired
     private EventIngestionService eventIngestionService;
-
     @Autowired
     private OrgRepository orgRepository;
-
     @Autowired
     private AssetRepository assetRepository;
-
     @Autowired
     private RuleRepository ruleRepository;
-
     @Autowired
     private RuleAssignmentRepository ruleAssignmentRepository;
-
     @Autowired
     private AlertRepository alertRepository;
-
     @Autowired
     private AlertEventRepository alertEventRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private OrgMembershipRepository orgMembershipRepository;
+    @MockitoBean
+    private CurrentUserService currentUserService;
 
     private Org org;
     private Asset asset;
-    private Rule rule;
     private RuleAssignment ruleAssignment;
 
     @TestConfiguration(proxyBeanMethods = false)
     static class ContainerConfiguration {
-
         @Bean
         @ServiceConnection
         PostgreSQLContainer<?> postgresContainer() {
@@ -85,13 +89,26 @@ class EventIngestionWorkflowIntegrationTest {
         org.setName("Test Org");
         org = orgRepository.save(org);
 
+        User user = new User();
+        user.setUsername("test-user");
+        user.setPasswordHash("unused-for-oidc");
+        user.setExternalSubject("oidc-subject-1");
+        user = userRepository.save(user);
+
+        OrgMembership membership = new OrgMembership();
+        membership.setOrg(org);
+        membership.setUser(user);
+        membership.setUserRole("MEMBER");
+        orgMembershipRepository.save(membership);
+        when(currentUserService.requireSubject()).thenReturn("oidc-subject-1");
+
         asset = new Asset();
         asset.setName("Payment Service");
         asset.setType("SERVICE");
         asset.setOrg(org);
         asset = assetRepository.save(asset);
 
-        rule = new Rule();
+        Rule rule = new Rule();
         rule.setConditionType("PAYMENT");
         rule.setThreshold(new BigDecimal("100.00"));
         rule.setOperator(RuleOperator.GREATER_THAN);
@@ -110,26 +127,21 @@ class EventIngestionWorkflowIntegrationTest {
     @Test
     void createsAlertAndLinksItToEventWhenRuleMatches() {
         Event savedEvent = eventIngestionService.ingestEvent(
-                new CreateEventRequestDto(
-                        asset.getId(),
-                        "PAYMENT",
-                        new BigDecimal("150.00")));
+                new CreateEventRequestDto(asset.getId(), "PAYMENT", new BigDecimal("150.00")));
 
-        List<Alert> alerts = alertRepository.findByRuleAssignment_Asset_IdAndStatus(
-                asset.getId(),
-                "OPEN");
-
+        List<Alert> alerts = alertRepository.findAll().stream()
+                .filter(alert -> asset.getId().equals(alert.getRuleAssignment().getAsset().getId()))
+                .filter(alert -> "OPEN".equals(alert.getStatus()))
+                .toList();
         assertEquals(1, alerts.size());
 
         Alert savedAlert = alerts.get(0);
-
         assertEquals(ruleAssignment.getId(), savedAlert.getRuleAssignment().getId());
         assertEquals("OPEN", savedAlert.getStatus());
         assertEquals("HIGH", savedAlert.getSeverity());
         assertEquals(0, savedAlert.getNotificationCount());
 
         List<AlertEvent> alertEvents = alertEventRepository.findAll();
-
         assertEquals(1, alertEvents.size());
         assertEquals(savedAlert.getId(), alertEvents.get(0).getAlert().getId());
         assertEquals(savedEvent.getId(), alertEvents.get(0).getEvent().getId());
